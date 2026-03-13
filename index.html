@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>天地图 + 建筑白膜</title>
+  <script src="https://cdn.jsdelivr.net/npm/cesium@1.104/Build/Cesium/Cesium.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cesium@1.104/Build/Cesium/Widgets/widgets.css">
+  <style>
+    html,body,#cesiumContainer { width:100%;height:100%;margin:0;padding:0; }
+  </style>
+</head>
+<body>
+<div id="cesiumContainer"></div>
+
+<script>
+// 你的 Cesium Token
+Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmZWJkNzEzZC0yYjNhLTQwZDMtYTlhOS1iYTA3OGJiMTg4MzYiLCJpZCI6NDAxMTg0LCJpYXQiOjE3NzMxMjcyMjN9.jzeRB8sRrVy7ijyTxmMAq6BWu1Jrbt-tdhq8IWRNb60";
+
+// 初始化地球（打开图层选择器！）
+const viewer = new Cesium.Viewer('cesiumContainer', {
+  baseLayerPicker: true,
+  imageryProvider: false,
+  timeline: false,
+  animation: false
+});
+
+// ==========================================
+// 【正常底图 1：OSM 电子图】（一定能显示，解决蓝色地球）
+// ==========================================
+const osm = new Cesium.OpenStreetMapImageryProvider({
+  url: 'https://tile.openstreetmap.de/'
+});
+
+// ==========================================
+// 【天地图 卫星图】（代理）
+// ==========================================
+const tdImg = new Cesium.UrlTemplateImageryProvider({
+  url: "http://localhost:3000/tianditu/img/{z}/{x}/{y}"
+});
+const tdCta = new Cesium.UrlTemplateImageryProvider({
+  url: "http://localhost:3000/tianditu/cta/{z}/{x}/{y}"
+});
+
+// ==========================================
+// 【天地图 矢量图】（代理）
+// ==========================================
+const tdVec = new Cesium.UrlTemplateImageryProvider({
+  url: "http://localhost:3000/tianditu/vec/{z}/{x}/{y}"
+});
+const tdCva = new Cesium.UrlTemplateImageryProvider({
+  url: "http://localhost:3000/tianditu/cva/{z}/{x}/{y}"
+});
+
+// 添加到底图选择器
+const layers = viewer.imageryLayers;
+layers.addImageryProvider(osm);       // 1. OSM底图
+layers.addImageryProvider(tdImg);      // 2. 天地图卫星
+layers.addImageryProvider(tdCta);      // 3. 卫星标注
+layers.addImageryProvider(tdVec);      // 4. 天地图矢量
+layers.addImageryProvider(tdCva);      // 5. 矢量标注
+
+// ==========================================
+// 建筑白膜
+// ==========================================
+const buildings = viewer.scene.primitives.add(
+  new Cesium.Cesium3DTileset({
+    url: Cesium.IonResource.fromAssetId(96188)
+  })
+);
+buildings.style = new Cesium.Cesium3DTileStyle({
+  color: "color('white', 0.95)"
+});
+
+// 飞到广州
+viewer.camera.flyTo({
+  destination: Cesium.Cartesian3.fromDegrees(113.3938, 23.0597, 1500)
+});
+</script>
+</body>
+</html>
